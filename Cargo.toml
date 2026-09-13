@@ -15,5 +15,5 @@ lto         = true
 incremental = true
 panic       = "abort"
 
-[profile.debug]
+[profile.dev]
 panic       = "abort"
