@@ -38,13 +38,16 @@
               (rust-bin.selectLatestNightlyWith (
                 toolchain:
                 toolchain.default.override {
-                  extensions = [ "clippy" ];
+                  extensions = [ "rust-src" "clippy" ];
                 }
               ))
             ];
 
             packages = with pkgs; [
               just
+              nasm
+              pkgsCross.i686-embedded.clang
+              pkgsCross.i686-embedded.lld
               pkgsCross.i686-embedded.qemu
               xorriso
             ];
