@@ -45,6 +45,8 @@
 
             packages = with pkgs; [
               just
+              pkgsCross.i686-embedded.qemu
+              xorriso
             ];
           };
         };
