@@ -1,12 +1,12 @@
 /// UART serial tty for QEMU.
 use core::cell::UnsafeCell;
+use core::fmt;
 use core::mem::MaybeUninit;
 use core::ops::{Deref, DerefMut};
-use core::fmt;
 
-use crate::asm::{outb, inb};
+use crate::asm::{inb, outb};
 
-const COM1_PORT: u16 = 0x3F8;  // Base address for COM1
+const COM1_PORT: u16 = 0x3F8; // Base address for COM1
 
 #[derive(Debug)]
 struct SerialPort(pub u16);
@@ -46,9 +46,9 @@ impl SerialPort {
         self.outb(1, 0x0);
         self.clear_dlab();
 
-        self.outb(3, 0b11);  // Set protocol: 8N1
-        self.outb(2, 0xC7);  // FIFO
-        self.outb(4, 0x0F);  // Enable modem
+        self.outb(3, 0b11); // Set protocol: 8N1
+        self.outb(2, 0xC7); // FIFO
+        self.outb(4, 0x0F); // Enable modem
     }
 
     fn can_put(&self) -> bool {
@@ -86,14 +86,13 @@ impl core::fmt::Write for SerialConsole {
 }
 
 pub fn _print(args: fmt::Arguments) {
-    use core::fmt::Write;
     use crate::serial::SERIAL_GLOBAL;
+    use core::fmt::Write;
     unsafe {
         #[expect(static_mut_refs)]
         let _ = SERIAL_GLOBAL.write_fmt(args);
     }
 }
-
 
 // @attrib: https://github.com/ryanlg/Bedrock/blob/master/bootloader/src/arch/x86/core.rs
 pub static mut SERIAL_GLOBAL: ConsoleGlobal = ConsoleGlobal {

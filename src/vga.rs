@@ -1,7 +1,7 @@
 use core::cell::UnsafeCell;
+use core::fmt;
 use core::mem::MaybeUninit;
 use core::ops::{Deref, DerefMut};
-use core::fmt;
 
 const TEXT_BUFFER_ADDRESS: i32 = 0xB8000;
 const TEXT_BUFFER_WIDTH: usize = 80;
@@ -101,7 +101,6 @@ impl Console {
     }
 }
 
-
 // @attrib: https://github.com/ryanlg/Bedrock/blob/master/bootloader/src/arch/x86/core.rs
 // I know, this is very ugly, but I didn't want to pull in `lazy_static` like
 // phil-opp does, so this is a hack that I came up with a long time ago.
@@ -136,7 +135,7 @@ impl core::fmt::Write for Console {
         for byte in s.bytes() {
             match byte {
                 b'\n' => self.write_newline(),
-                _     => self.write(byte, TextColor::White),
+                _ => self.write(byte, TextColor::White),
             }
         }
         Ok(())
@@ -144,14 +143,13 @@ impl core::fmt::Write for Console {
 }
 
 pub fn _print(args: fmt::Arguments) {
-    use core::fmt::Write;
     use crate::vga::CONSOLE_GLOBAL;
+    use core::fmt::Write;
     unsafe {
         #[expect(static_mut_refs)]
         let _ = CONSOLE_GLOBAL.write_fmt(args);
     }
 }
-
 
 impl Deref for ConsoleGlobal {
     type Target = Console;
