@@ -2,6 +2,8 @@
 #![no_std]
 #![no_main]
 
+mod asm;
+mod serial;
 mod vga;
 
 use core::panic::PanicInfo;
@@ -9,6 +11,8 @@ use core::panic::PanicInfo;
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
     print!("Hello World{}", "!");
+    serial_print!("Hello World{}", "!!!!");
+
     loop {}
 }
 

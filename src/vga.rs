@@ -1,10 +1,11 @@
 use core::cell::UnsafeCell;
 use core::mem::MaybeUninit;
 use core::ops::{Deref, DerefMut};
+use core::fmt;
 
-pub const TEXT_BUFFER_ADDRESS: i32 = 0xB8000;
-pub const TEXT_BUFFER_WIDTH: usize = 80;
-pub const TEXT_BUFFER_HEIGHT: usize = 25;
+const TEXT_BUFFER_ADDRESS: i32 = 0xB8000;
+const TEXT_BUFFER_WIDTH: usize = 80;
+const TEXT_BUFFER_HEIGHT: usize = 25;
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
@@ -142,6 +143,15 @@ impl core::fmt::Write for Console {
     }
 }
 
+pub fn _print(args: fmt::Arguments) {
+    use core::fmt::Write;
+    use crate::vga::CONSOLE_GLOBAL;
+    unsafe {
+        #[expect(static_mut_refs)]
+        let _ = CONSOLE_GLOBAL.write_fmt(args);
+    }
+}
+
 
 impl Deref for ConsoleGlobal {
     type Target = Console;
@@ -166,12 +176,5 @@ macro_rules! println {
 
 #[macro_export]
 macro_rules! print {
-    ($($arg:tt)*) => {
-        use ::core::fmt::Write;
-        use crate::vga::CONSOLE_GLOBAL;
-        unsafe {
-            #[expect(static_mut_refs)]
-            let _ = CONSOLE_GLOBAL.write_fmt(format_args!($($arg)*));
-        }
-    }
+    ($($arg:tt)*) => ($crate::vga::_print(format_args!($($arg)*)));
 }
