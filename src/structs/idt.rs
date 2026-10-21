@@ -1,13 +1,48 @@
 //! https://wiki.osdev.org/Interrupt_Descriptor_Table
 use crate::asm::lidt;
 
+pub enum EntryGateType {
+    Interrupt,
+    Trap,
+    // @todo: Abort?
+}
+
+#[repr(transparent)]
+#[derive(Clone, Copy)]
+pub struct EntryFlags(u8);
+
+impl Default for EntryFlags {
+    /// Default IDT entry: enabled, ring 0, trap gate
+    fn default() -> Self {
+        Self(0b1_00_0_1111)
+    }
+}
+
+impl EntryFlags {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub const fn missing() -> Self {
+        Self(0)
+    }
+
+    pub fn set_gate_type(&mut self, gate_type: EntryGateType) -> &mut Self {
+        match gate_type {
+            EntryGateType::Interrupt => self.0 &= !0b1,
+            EntryGateType::Trap => self.0 |= 0b1,
+        }
+        self
+    }
+}
+
 #[derive(Clone, Copy)]
 #[repr(C)]
 struct Entry {
     pointer_low: u16,
     segment_selector: u16,
     reserved: u8,
-    flags: u8, // P(1), DPL(2), 0(1), Gate Type(4)
+    flags: EntryFlags,
     pointer_high: u16,
 }
 
@@ -17,8 +52,19 @@ impl Entry {
             pointer_low: 0,
             segment_selector: 0,
             reserved: 0,
-            flags: 0,
+            flags: EntryFlags::missing(),
             pointer_high: 0,
+        }
+    }
+
+    pub fn new(isr: IsrFunc, gate_type: EntryGateType) -> Self {
+        let ptr = isr as u32;
+        Self {
+            pointer_low: ptr as u16,
+            segment_selector: 0x08, // code segment
+            reserved: 0,
+            flags: *EntryFlags::new().set_gate_type(gate_type),
+            pointer_high: (ptr >> 16) as u16,
         }
     }
 }
@@ -45,6 +91,10 @@ impl InterruptDescriptorTable {
             base: self.as_ptr(),
         });
     }
+
+    pub fn set_isr(&mut self, number: u8, gate_type: EntryGateType, isr: IsrFunc) {
+        self.entries[number as usize] = Entry::new(isr, gate_type);
+    }
 }
 
 #[repr(C, packed)]
@@ -52,3 +102,5 @@ pub struct InterruptDescriptorPointer {
     pub limit: u16,
     pub base: u32,
 }
+
+type IsrFunc = extern "C" fn(/*_: @todo: some sort of frame*/) -> !;

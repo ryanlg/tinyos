@@ -3,21 +3,22 @@
 #![no_main]
 
 mod asm;
-mod serial;
-mod vga;
-mod structs;
 mod idt;
+mod serial;
+mod structs;
+mod vga;
 
 use core::panic::PanicInfo;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
-    print!("Hello World{}", "!");
-    serial_print!("Hello World{}", "!!!!");
+    println!("Rust start");
 
+    println!("IDT init start");
     idt::init();
+    println!("IDT init done");
 
-    print!("IDT init done");
+    loop {}
 }
 
 /// This function is called on panic.
