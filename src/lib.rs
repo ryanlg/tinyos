@@ -5,6 +5,8 @@
 mod asm;
 mod serial;
 mod vga;
+mod structs;
+mod idt;
 
 use core::panic::PanicInfo;
 
@@ -13,7 +15,9 @@ pub extern "C" fn _start() -> ! {
     print!("Hello World{}", "!");
     serial_print!("Hello World{}", "!!!!");
 
-    loop {}
+    idt::init();
+
+    print!("IDT init done");
 }
 
 /// This function is called on panic.

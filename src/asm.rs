@@ -1,6 +1,8 @@
 /// Assembly wrapped in Rust.
 use core::arch::asm;
 
+use crate::structs::idt::InterruptDescriptorPointer;
+
 /// Output one byte to port
 pub fn outb(port: u16, byte: u8) {
     unsafe {
@@ -25,4 +27,15 @@ pub fn inb(port: u16) -> u8 {
     }
 
     byte
+}
+
+/// Load Iterrupt Descriptor Table Register
+pub fn lidt(pointer: InterruptDescriptorPointer) {
+    unsafe {
+        asm!(
+            "lidt [{}]",
+            in(reg) &pointer,
+            options(readonly, nostack),
+        );
+    }
 }
