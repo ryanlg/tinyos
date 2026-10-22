@@ -2,7 +2,7 @@ use core::arch::naked_asm;
 use core::cell::UnsafeCell;
 
 use crate::structs::idt::{EntryGateType, InterruptDescriptorTable, InterruptStackFrame};
-use crate::{print, println, serial_print, serial_println};
+use crate::{print, println, serial_println};
 
 struct IdtCell(UnsafeCell<InterruptDescriptorTable>);
 
@@ -57,7 +57,7 @@ pub fn init() {
 
 extern "C" fn division_by_zero(frame: &InterruptStackFrame) {
     println!("FAULT: division by zero!");
-    println!("{}", frame);
+    serial_println!("{}", frame);
 
     loop {}
 }

@@ -12,6 +12,7 @@ use core::panic::PanicInfo;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
+    serial::init();
     println!("Rust start");
 
     println!("IDT init start");

@@ -1,8 +1,6 @@
 /// UART serial tty for QEMU.
 use core::cell::UnsafeCell;
 use core::fmt;
-use core::mem::MaybeUninit;
-use core::ops::{Deref, DerefMut};
 
 use crate::asm::{inb, outb};
 
@@ -12,7 +10,7 @@ const COM1_PORT: u16 = 0x3F8; // Base address for COM1
 struct SerialPort(pub u16);
 
 impl SerialPort {
-    fn new(port: u16) -> Self {
+    const fn new(port: u16) -> Self {
         SerialPort(port)
     }
 
@@ -65,10 +63,12 @@ impl SerialPort {
 pub struct SerialConsole(SerialPort);
 
 impl SerialConsole {
-    pub fn new() -> Self {
-        let console = SerialConsole(SerialPort::new(COM1_PORT));
-        console.0.init();
-        console
+    pub const fn new() -> Self {
+        SerialConsole(SerialPort::new(COM1_PORT))
+    }
+
+    pub fn init(&self) {
+        self.0.init();
     }
 
     pub fn write(&self, ascii: u8) {
@@ -76,8 +76,8 @@ impl SerialConsole {
     }
 }
 
-impl core::fmt::Write for SerialConsole {
-    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+impl fmt::Write for SerialConsole {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
         for byte in s.bytes() {
             self.write(byte);
         }
@@ -86,58 +86,33 @@ impl core::fmt::Write for SerialConsole {
 }
 
 pub fn _print(args: fmt::Arguments) {
-    use crate::serial::SERIAL_GLOBAL;
-    use core::fmt::Write;
+    let ptr = SERIAL_GLOBAL.0.get();
+
     unsafe {
-        #[expect(static_mut_refs)]
-        let _ = SERIAL_GLOBAL.write_fmt(args);
+        let console = &mut *ptr;
+        let _ = fmt::Write::write_fmt(console, args);
     }
 }
 
-// @attrib: https://github.com/ryanlg/Bedrock/blob/master/bootloader/src/arch/x86/core.rs
-pub static mut SERIAL_GLOBAL: ConsoleGlobal = ConsoleGlobal {
-    initialized: UnsafeCell::new(false),
-    console: UnsafeCell::new(MaybeUninit::<SerialConsole>::uninit()),
-};
+struct SerialConsoleCell(UnsafeCell<SerialConsole>);
+// SAFETY: Not actually thread safe, but we are single-core only.
+unsafe impl Sync for SerialConsoleCell {}
 
-/// Not thread safe at all
-unsafe impl Sync for ConsoleGlobal {}
+static SERIAL_GLOBAL: SerialConsoleCell = SerialConsoleCell(UnsafeCell::new(SerialConsole::new()));
 
-pub struct ConsoleGlobal {
-    initialized: UnsafeCell<bool>,
-    console: UnsafeCell<MaybeUninit<SerialConsole>>,
-}
+pub fn init() {
+    let ptr = SERIAL_GLOBAL.0.get();
 
-impl ConsoleGlobal {
-    fn try_initialize(&self) {
-        unsafe {
-            if !*self.initialized.get() {
-                (*self.console.get()).write(SerialConsole::new());
-                *self.initialized.get() = true;
-            }
-        }
-    }
-}
-
-impl Deref for ConsoleGlobal {
-    type Target = SerialConsole;
-    fn deref(&self) -> &Self::Target {
-        self.try_initialize();
-        unsafe { &*(*self.console.get()).as_ptr() }
-    }
-}
-
-impl DerefMut for ConsoleGlobal {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.try_initialize();
-        unsafe { &mut *(*self.console.get()).as_mut_ptr() }
+    unsafe {
+        let console = &mut *ptr;
+        console.init();
     }
 }
 
 #[macro_export]
 macro_rules! serial_println {
-    ()            => (serial_print!("\n"));
-    ($($arg:tt)*) => (serial_print!("{}\n", format_args!($($arg)*)))
+    ()            => (use crate::serial_print; serial_print!("\n"));
+    ($($arg:tt)*) => (use crate::serial_print; serial_print!("{}\n", format_args!($($arg)*)))
 }
 
 #[macro_export]
