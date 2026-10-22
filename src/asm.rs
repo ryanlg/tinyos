@@ -39,3 +39,10 @@ pub fn lidt(pointer: InterruptDescriptorPointer) {
         );
     }
 }
+
+/// Trigger #DE fault for testing
+pub fn fault_de() {
+    unsafe {
+        asm!("mov dx, 0; div dx");
+    }
+}

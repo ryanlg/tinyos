@@ -41,8 +41,8 @@ clean:
 	rm -rf build/
 
 # ---------------- Run ----------------
-qemu:
-	$(QEMU) $(qemu_iso_arg) $(qemu_serial_arg)
+qemu: debug
+	$(QEMU) $(qemu_iso_arg) $(qemu_serial_arg) -no-reboot -d cpu_reset
 
 qemu-gdb:
 	$(QEMU) $(qemu_iso_arg) $(qemu_serial_arg) -s -S

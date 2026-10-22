@@ -1,4 +1,6 @@
 //! https://wiki.osdev.org/Interrupt_Descriptor_Table
+use core::fmt;
+
 use crate::asm::lidt;
 
 pub enum EntryGateType {
@@ -103,4 +105,25 @@ pub struct InterruptDescriptorPointer {
     pub base: u32,
 }
 
-type IsrFunc = extern "C" fn(/*_: @todo: some sort of frame*/) -> !;
+#[repr(C)]
+pub struct InterruptStackFrame {
+    ip: u32,
+    cs: u16,
+    flags: u32,
+}
+
+impl fmt::Display for InterruptStackFrame {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            r"INTERRUPT FRAME:
+    IP: {0:#X}
+    CS: {1:#X}
+    FLAGS: {2:#X}
+",
+            self.ip, self.cs, self.flags
+        )
+    }
+}
+
+type IsrFunc = extern "C" fn(&InterruptStackFrame);

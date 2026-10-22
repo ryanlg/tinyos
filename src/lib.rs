@@ -18,6 +18,8 @@ pub extern "C" fn _start() -> ! {
     idt::init();
     println!("IDT init done");
 
+    asm::fault_de();
+
     loop {}
 }
 
