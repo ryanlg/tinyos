@@ -1,7 +1,9 @@
 use core::arch::naked_asm;
 use core::cell::UnsafeCell;
 
-use crate::structs::idt::{EntryGateType, InterruptDescriptorTable, InterruptStackFrame};
+use crate::structs::idt::{
+    EntryGateType, InterruptDescriptorTable, InterruptStackFrame, InterruptStackFrameWithErrorCode,
+};
 use crate::{print, println, serial_println};
 
 struct IdtCell(UnsafeCell<InterruptDescriptorTable>);
@@ -50,6 +52,7 @@ pub fn init() {
         let table = &mut *ptr;
 
         table.set_isr(0, EntryGateType::Trap, handler!(division_by_zero));
+        table.set_isr(8, EntryGateType::Trap, handler!(double_fault));
 
         table.load();
     };
@@ -57,7 +60,14 @@ pub fn init() {
 
 extern "C" fn division_by_zero(frame: &InterruptStackFrame) {
     println!("FAULT: division by zero!");
-    serial_println!("{}", frame);
+    println!("{}", frame);
+
+    loop {}
+}
+
+extern "C" fn double_fault(frame: &InterruptStackFrameWithErrorCode) {
+    println!("FAULT: double fault!");
+    println!("{}", frame);
 
     loop {}
 }

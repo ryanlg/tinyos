@@ -127,3 +127,28 @@ impl fmt::Display for InterruptStackFrame {
 }
 
 type IsrFunc = extern "C" fn(&InterruptStackFrame);
+
+#[repr(C)]
+pub struct InterruptStackFrameWithErrorCode {
+    errno: u32,
+    ip: u32,
+    cs: u16,
+    flags: u32,
+}
+
+impl fmt::Display for InterruptStackFrameWithErrorCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            r"INTERRUPT FRAME:
+    IP: {0:#X}
+    CS: {1:#X}
+    FLAGS: {2:#X}
+    ERROR: {3}
+",
+            self.ip, self.cs, self.flags, self.errno
+        )
+    }
+}
+
+type IsrFuncWithErrorCode = extern "C" fn(&InterruptStackFrameWithErrorCode);
