@@ -22,8 +22,11 @@ start:
 
     ; Install GDT
     lgdt [gdt.pointer]
+    ; Far jump to reset CS after loading new GDT
+    jmp 0x08:.reset_segment
 
-    ; At this point we are using segmente memory
+.reset_segment:
+    ; At this point we are using segment memory
     ; Set all the segment register to the data segment
     mov   ax, 0x10
     mov   ds, ax
