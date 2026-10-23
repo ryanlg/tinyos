@@ -111,8 +111,8 @@ pub fn init() {
 
 #[macro_export]
 macro_rules! serial_println {
-    ()            => (use crate::serial_print; serial_print!("\n"));
-    ($($arg:tt)*) => (use crate::serial_print; serial_print!("{}\n", format_args!($($arg)*)))
+    ()            => ($crate::serial_print!("\n"));
+    ($($arg:tt)*) => ($crate::serial_print!("{}\n", format_args!($($arg)*)));
 }
 
 #[macro_export]

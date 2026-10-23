@@ -13,7 +13,7 @@ use core::panic::PanicInfo;
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
     serial::init();
-    println!("Rust start");
+    dual_println!("\nRust start");
 
     println!("IDT init start");
     idt::init();
@@ -28,4 +28,18 @@ pub extern "C" fn _start() -> ! {
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
     loop {}
+}
+
+#[macro_export]
+macro_rules! dual_println {
+    () => ($crate::dual_print!("\n"));
+    ($($arg:tt)*) => ($crate::dual_print!("{}\n", ::core::format_args!($($arg)*)));
+}
+
+#[macro_export]
+macro_rules! dual_print {
+    ($($arg:tt)*) => {{
+        $crate::vga::_print(format_args!($($arg)*));
+        $crate::serial::_print(format_args!($($arg)*));
+    }};
 }

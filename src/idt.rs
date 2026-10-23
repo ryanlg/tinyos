@@ -1,10 +1,10 @@
 use core::arch::naked_asm;
 use core::cell::UnsafeCell;
 
+use crate::dual_println;
 use crate::structs::idt::{
     EntryGateType, InterruptDescriptorTable, InterruptStackFrame, InterruptStackFrameWithErrorCode,
 };
-use crate::{print, println, serial_println};
 
 struct IdtCell(UnsafeCell<InterruptDescriptorTable>);
 
@@ -59,15 +59,15 @@ pub fn init() {
 }
 
 extern "C" fn division_by_zero(frame: &InterruptStackFrame) {
-    println!("FAULT: division by zero!");
-    println!("{}", frame);
+    dual_println!("FAULT: division by zero!");
+    dual_println!("{}", frame);
 
     loop {}
 }
 
 extern "C" fn double_fault(frame: &InterruptStackFrameWithErrorCode) {
-    println!("FAULT: double fault!");
-    println!("{}", frame);
+    dual_println!("FAULT: double fault!");
+    dual_println!("{}", frame);
 
     loop {}
 }
