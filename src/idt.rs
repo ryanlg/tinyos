@@ -13,6 +13,9 @@ unsafe impl Sync for IdtCell {}
 
 static IDT_GLOBAL: IdtCell = IdtCell(UnsafeCell::new(InterruptDescriptorTable::empty()));
 
+// @attrib: https://os.phil-opp.com/returning-from-exceptions/#exceptions-with-error-codes
+// I got stuck so I looked it up, and borrowed this macro + naked function idea from Phil.
+// The code inside is mine, since os.phil-opp is x86-64.
 macro_rules! handler {
     ($name: ident) => {{
         // https://wiki.osdev.org/Interrupt_Service_Routines#Two-Stage_Assembly_Wrapping
